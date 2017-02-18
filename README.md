@@ -1,3 +1,2 @@
 # Electron Diffusion code
-# The code will be added in this repository
-
+Code to calculate the diffusion of electrons from a central source and the gamma-ray spectrum produced by them
