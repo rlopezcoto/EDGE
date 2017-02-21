@@ -1,0 +1,7 @@
+GAMERA
+numpy
+matplotlib
+astropy
+gammapy
+scipy
+argparse
