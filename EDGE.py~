@@ -522,7 +522,7 @@ if __name__=='__main__':
     
     # Curves from other papers
     Yuksel_delta04 = np.loadtxt("Data/Predictions_papers/Yuksel_Fig3_dotted_delta04.csv",delimiter=',')
-    Aharonian_Fig4 = np.loadtxt("Data/Predictions_papers/Aharonian_1995_Fig4_time_dependent_injection.csv",skiprows=1)
+    Aharonian_Fig4 = np.loadtxt("Data/Predictions_papers/Aharonian_Fig_4_time_dependent_injection.csv",skiprows=1)
 
     min_bin_deg = 0.
     max_bin_deg = SIZE+0.2
