@@ -56,7 +56,7 @@ p.add_argument("-a", "--age", dest="AGE", type=float, default=3.e5,
 p.add_argument("-emax", "--emax", dest="EMAX", type=float, default=500.,
                help="EMAX of accelerated electrons") # You give it in TeV but it is transformed to erg
 p.add_argument("-m", "--mu", dest="MU", type=float, default=0.5,
-               help="Percentage of energy that goes into electrons") 
+               help="Fraction of energy that goes into electrons") 
 p.add_argument("-d0", "--d0", dest="D0", type=float, default=4.e27,
                help="Diffusion coefficient") 
 p.add_argument("-s", "--s", dest="SIZE", type=float, default=5.,
@@ -87,6 +87,13 @@ p.add_argument("-only_flux_earth", "--only_flux_earth", dest="ONLY_FLUX_EARTH", 
                help="Only calculate the flux at the Earth and exit") 
 p.add_argument("-eps", "--eps", dest="FIG_EPS", action='store_true', default=False,
                help="Save Figures in EPS format") 
+
+# Binning inputs
+p.add_argument("-eb", "--ebins", dest="EBINS", type=float, default=100,
+               help="Energy bins of the E_R_Array") 
+p.add_argument("-rb", "--rbins", dest="RBINS", type=float, default=400,
+               help="Radial bins of the E_R_Array") 
+
 
 # Geminga-related inputs
 p.add_argument("-norm", "--norm", dest="NORM", type=float, default=12.1e-15,
@@ -123,16 +130,20 @@ TC        = opts.TC                     # 1.2e4              # yr
 P         = opts.P                      # 20.                # ms
 P0        = opts.P0                     # 20.                # ms
 
+EBINS     = opts.EBINS                  # 100          
+RBINS     = opts.RBINS                  # 400          
+
+BIRTH_PERIOD    = opts.BIRTH_PERIOD     # False
+ALL_PULSAR      = opts.ALL_PULSAR       # False
+ONLY_FLUX_EARTH = opts.ONLY_FLUX_EARTH  # False
+FIG_EPS         = opts.FIG_EPS          # False
+
 NORM      = opts.NORM                   # 12.1e-15           # TeV^-1 cm^-2 s^-1
 NORM_ERR  = opts.NORM_ERR               # 2.5e-15            # TeV^-1 cm^-2 s^-1
 PIVOT_E   = opts.PIVOT_E                # 20                 # TeV
 GAMMA     = opts.GAMMA                  # 2.40           
 GAMMA_ERR = opts.GAMMA_ERR              # 0.09          
 
-BIRTH_PERIOD    = opts.BIRTH_PERIOD     # False
-ALL_PULSAR      = opts.ALL_PULSAR       # False
-ONLY_FLUX_EARTH = opts.ONLY_FLUX_EARTH  # False
-FIG_EPS         = opts.FIG_EPS          # False
 
 
 t=AGE*gp.yr_to_sec                         # s
@@ -246,7 +257,7 @@ def Create_E_R_ArrayOfElectrons(rbins,ebins):
     #fig = plt.figure()
     halfwidth = []   # The point at which the density of electrons has gone down to half its maximum value for a given energy
     for ee in e:                                     # For a given energy 
-        print ee
+        print ("Energy",ee)
         #ee = ee*gp.TeV_to_erg
         line = []
         lineplot = []
@@ -597,7 +608,7 @@ if __name__=='__main__':
     ETRAJCONT,ETRAJCONTINVERSE,LAMBCONT = CalculateEnergyTrajectory(fp)
 
     # This creates an array of electron densities in (E,R) space
-    twoDarray,twoDarrayPLOT,halfwidth,E,R = Create_E_R_ArrayOfElectrons(400,100)
+    twoDarray,twoDarrayPLOT,halfwidth,E,R = Create_E_R_ArrayOfElectrons(RBINS,EBINS)
     # twoDarray:  2-D Array containing all the electron densities, for each of the radii and the energies [1/(erg*cm^3)] 
     # twoDarrayPLOT: The same * E^2, for plotting  [erg/cm^3)] 
     # halfwidth: Array containing, for each energy, the distance at which the maximum density goes to half 
