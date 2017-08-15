@@ -73,8 +73,14 @@ p.add_argument("-brind", "--brind", dest="BRIND", type=float, default=3.,
                help="Breaking index") 
 p.add_argument("-tau", "--tau", dest="TC", type=float, default=1.2e4,
                help="Initial spin-down timescale") 
+p.add_argument("-p", "--p", dest="P", type=float, default=23.7,
+               help="Pulsar Period [ms]") 
+p.add_argument("-p0", "--p0", dest="P0", type=float, default=4.7,
+               help="Initial pulsar period [ms]") 
 
 # Running-related inputs
+p.add_argument("-birth_period", "--birth_period", dest="BIRTH_PERIOD", action='store_true', default=False,
+               help="Flag to calculate initial spin-down characteristic age from birth period") 
 p.add_argument("-all_pulsar", "--all_pulsar", dest="ALL_PULSAR", action='store_true', default=False,
                help="Flag to calculate the contribution at the Earth of all pulsars") 
 p.add_argument("-only_flux_earth", "--only_flux_earth", dest="ONLY_FLUX_EARTH", action='store_true', default=False,
@@ -114,6 +120,8 @@ BCONT     = opts.BCONT                  # 3.e-6              # Gauss
 EDOT      = opts.EDOT                   # 3.2e34             # erg/s      
 BRIND     = opts.BRIND                  # 3
 TC        = opts.TC                     # 1.2e4              # yr
+P         = opts.P                      # 20.                # ms
+P0        = opts.P0                     # 20.                # ms
 
 NORM      = opts.NORM                   # 12.1e-15           # TeV^-1 cm^-2 s^-1
 NORM_ERR  = opts.NORM_ERR               # 2.5e-15            # TeV^-1 cm^-2 s^-1
@@ -121,9 +129,10 @@ PIVOT_E   = opts.PIVOT_E                # 20                 # TeV
 GAMMA     = opts.GAMMA                  # 2.40           
 GAMMA_ERR = opts.GAMMA_ERR              # 0.09          
 
-ALL_PULSAR= opts.ALL_PULSAR             # False
-ONLY_FLUX_EARTH= opts.ONLY_FLUX_EARTH   # False
-FIG_EPS   = opts.FIG_EPS   # False
+BIRTH_PERIOD    = opts.BIRTH_PERIOD     # False
+ALL_PULSAR      = opts.ALL_PULSAR       # False
+ONLY_FLUX_EARTH = opts.ONLY_FLUX_EARTH  # False
+FIG_EPS         = opts.FIG_EPS          # False
 
 
 t=AGE*gp.yr_to_sec                         # s
@@ -137,7 +146,6 @@ nu_0=nu+nu_dot*t+nu_dot_dot_old*pow(t,2)
 #nu_0=nu+nu_dot*t                           # Hz      Initial frequency
 
 l0    =  5.e-20                            # s^-1
-LUM0=EDOT/pow(1+AGE/TC,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
 E_star=3.e-3 * gp.TeV_to_erg               # erg
 
 TIMEOFFSET = 0.                            # s
@@ -164,8 +172,18 @@ ESN = 2.5e48                               # erg
 # Luminosity evolution of a pulsar (simply spin-down)
 def CalculateLuminosity(bins):
     T = np.logspace(math.log10(TMIN),math.log10(2.*AGE),bins) # Array with the time 
-    lum = MU*LUM0*(1.+T/TC)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
-    print "LUM0",LUM0
+    if (BIRTH_PERIOD):
+        age = AGE*(2/(BRIND-1.))*(1-math.pow(P0/P,(BRIND-1.)))
+        tau = 2*AGE/(BRIND-1.)-age
+        lum0=EDOT/pow(1+AGE/tau,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
+        lum = MU*lum0*(1.+T/tau)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
+        tau0=tau
+        print("age,characteristic age,tau0",age,AGE,tau0)
+    else:
+        lum0=EDOT/pow(1+AGE/TC,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
+        lum = MU*lum0*(1.+T/TC)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
+        tau0=TC
+    print "LUM0",lum0
     if TIMEOFFSET != 0.:
         t_index = np.max(np.where(T < TIMEOFFSET)[0])
         lumBurst = np.vstack((T[:t_index], lum[:t_index])).T
@@ -173,7 +191,7 @@ def CalculateLuminosity(bins):
     else:
         lumCont = np.vstack((T, lum)).T    # We stack both arrays, having two columns, the first one for the time and the second for the corresponding luminosity
         lumBurst = []
-    return np.log10(lumBurst),np.log10(lumCont)
+    return np.log10(lumBurst),np.log10(lumCont),lum0,tau0
 
 # Diffusion coefficient at energy e (in erg)                                                                                                                                                               
 def Diffusion(e):
@@ -545,7 +563,7 @@ if __name__=='__main__':
     bin_Milagro = int(2.6/((max_bin_deg-min_bin_deg)/nbins))  # Bin for the corresponding size given by Milagro's point at FWHM=2.6
 
     #****************** LUMINOSITY *************
-    LUMBURST,LUMCONT = CalculateLuminosity(10000)
+    LUMBURST,LUMCONT,lum0,tau0 = CalculateLuminosity(10000)
     fig = plt.figure()
     print "LUMBURST,LUMCONT",LUMBURST,LUMCONT
     if len(LUMBURST) != 0:
@@ -558,9 +576,9 @@ if __name__=='__main__':
     plt.ylabel(r'L$_e$ [erg/s]')
     plt.xlabel("Age [kyr]")
     plt.plot((1., 2*AGE), (EDOT, EDOT), label=r'Constant injection luminosity',color='red')
-    plt.plot((TC, TC), (EDOT/10., 10**(LUMCONT[0,1]+1)), label=r'$\tau_c$',color='black',linestyle = "dashed")
-    print TC,EDOT/10.,LUMCONT[0,1]
-    plt.title(r'L$_0$=%.1e erg/s; $\tau_c$=%.1e yr; n = %.1f' %(LUM0,TC,BRIND))
+    plt.plot((tau0, tau0), (EDOT/10., 10**(LUMCONT[0,1]+1)), label=r'$\tau_c$',color='black',linestyle = "dashed")
+    print tau0,EDOT/10.,LUMCONT[0,1]
+    plt.title(r'L$_0$=%.1e erg/s; $\tau_c$=%.1e yr; n = %.1f' %(lum0,tau0,BRIND))
     plt.grid(color="black",alpha=.5)
     plt.legend(prop={'size':10},loc="upper right")
     #plt.legend(title="log10(L0),t0,n =\n"+str(round(math.log10(LUM0),2))+","+str(round(TC,2))+","+str(round(BRIND,2)),loc="upper right")
