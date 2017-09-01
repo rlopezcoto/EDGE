@@ -514,15 +514,15 @@ if __name__=='__main__':
     #tag = sys.argv[2]
     tag = opts.Name
     #data = np.loadtxt(points)
-    AMS_data = np.loadtxt("Data/Data_points/AMS_data.dat",skiprows=2)
-    HESS_data = np.loadtxt("Data/Data_points/HESS_data.dat",skiprows=2)
-    Fermi_data = np.loadtxt("Data/Data_points/Fermi_data.dat",skiprows=2)
-    AMS_positron_fraction = np.loadtxt("Data/Data_points/AMS_positron_fraction.dat",skiprows=2)
-    PAMELA_positron_fraction = np.loadtxt("Data/Data_points/PAMELA_positron_fraction.dat",skiprows=2)
+    AMS_data = np.loadtxt("../Data/Data_points/AMS_data.dat",skiprows=2)
+    HESS_data = np.loadtxt("../Data/Data_points/HESS_data.dat",skiprows=2)
+    Fermi_data = np.loadtxt("../Data/Data_points/Fermi_data.dat",skiprows=2)
+    AMS_positron_fraction = np.loadtxt("../Data/Data_points/AMS_positron_fraction.dat",skiprows=2)
+    PAMELA_positron_fraction = np.loadtxt("../Data/Data_points/PAMELA_positron_fraction.dat",skiprows=2)
     
     # Curves from other papers
-    Yuksel_delta04 = np.loadtxt("Data/Predictions_papers/Yuksel_Fig3_dotted_delta04.csv",delimiter=',')
-    Aharonian_Fig4 = np.loadtxt("Data/Predictions_papers/Aharonian_Fig_4_time_dependent_injection.csv",skiprows=1)
+    Yuksel_delta04 = np.loadtxt("../Data/Predictions_papers/Yuksel_Fig3_dotted_delta04.csv",delimiter=',')
+    Aharonian_Fig4 = np.loadtxt("../Data/Predictions_papers/Aharonian_1995_Fig4_time_dependent_injection.csv",skiprows=1)
 
     min_bin_deg = 0.
     max_bin_deg = SIZE+0.2
@@ -653,9 +653,9 @@ if __name__=='__main__':
 
     # Values for galactic electrons and positrons 
     # From Moskalenko and Strong (1998), Figure 5, left panel                                                                                                
-    primary_el_data = np.loadtxt("Data/Moskalenko_and_Strong/Primary_electrons.txt",skiprows=1)
-    secondary_el_data = np.loadtxt("Data/Moskalenko_and_Strong/Secondary_electrons.txt",skiprows=1)
-    secondary_pos_data = np.loadtxt("Data/Moskalenko_and_Strong/Secondary_positrons.txt",skiprows=1)
+    primary_el_data = np.loadtxt("../Data/Moskalenko_and_Strong/Primary_electrons.txt",skiprows=1)
+    secondary_el_data = np.loadtxt("../Data/Moskalenko_and_Strong/Secondary_electrons.txt",skiprows=1)
+    secondary_pos_data = np.loadtxt("../Data/Moskalenko_and_Strong/Secondary_positrons.txt",skiprows=1)
 
     x_primary_el    = primary_el_data[:,0] * 1e-6 # TeV
     y_primary_el    = primary_el_data[:,1] * 1e-3 * 1e4 # GeV m^-2 s^-1 sr^-1
