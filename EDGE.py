@@ -7,8 +7,8 @@
 #                                                     #
 #######################################################
 #                                                     #
-#     Joachim Hahn, MPIK, joachim.hahn@mpi-hd.mpg.de  #
 #     Ruben Lopez-Coto, MPIK, rlopez@mpi-hd.mpg.de    #
+#     Joachim Hahn, MPIK, joachim.hahn@mpi-hd.mpg.de  #
 #                                                     #
 #######################################################
 
@@ -20,7 +20,7 @@ import matplotlib
 # Force matplotlib to not use any Xwindows backend.                                                                                                                                                           
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-sys.path.append(os.path.abspath('/Users/rubenlopez/Code/GAMERA-master/lib'))
+sys.path.append(os.path.abspath('/Users/rubenlopez/Code/GAMERA/lib'))
 import gappa as gp
 import argparse
 import astropy.units as u
@@ -48,31 +48,31 @@ p.add_argument("-f", "--file", dest="File", type=str, default="Data/GemingaProfi
 p.add_argument("-al", "--alpha", dest="ALPHA", type=float, default=2.2,
                help="Spectral index of the injection spectrum")
 p.add_argument("-d", "--distance", dest="DIST", type=float, default=0.25,
-               help="Distance to the source (kpc)")
+               help="Distance to the source [kpc]")
 p.add_argument("-del", "--delta", dest="DELTA", type=float, default=0.33,
                help="Diffusion index")
 p.add_argument("-a", "--age", dest="AGE", type=float, default=3.e5,
-               help="Age of the source (yr)")
+               help="Age of the source [yr]")
 p.add_argument("-emax", "--emax", dest="EMAX", type=float, default=500.,
-               help="EMAX of accelerated electrons") # You give it in TeV but it is transformed to erg
+               help="EMAX of accelerated electrons [TeV]") # You give it in TeV but it is transformed to erg
 p.add_argument("-m", "--mu", dest="MU", type=float, default=0.5,
                help="Fraction of energy that goes into electrons") 
 p.add_argument("-d0", "--d0", dest="D0", type=float, default=4.e27,
-               help="Diffusion coefficient") 
+               help="Diffusion coefficient [cm^-2]") 
 p.add_argument("-s", "--s", dest="SIZE", type=float, default=5.,
                help="Size of the source given by the diffusion coefficient") 
 p.add_argument("-kn", "--kn", dest="KN", action='store_true', default=False,
                help="Flag to activate or deactivate the KN option to calculate IC losses") 
 p.add_argument("-edens", "--edens", dest="TOT_E_DENS", type=float, default=1.06,
-               help="Total energy density. For Thomson losses.") 
+               help="Total energy density. For Thomson losses. [eV/cm^3]") 
 p.add_argument("-bfield", "--bfield", dest="BCONT", type=float, default=3.e-6,
-               help="Magnetic field") 
+               help="Magnetic field [G]") 
 p.add_argument("-edot", "--edot", dest="EDOT", type=float, default=3.2e34,
-               help="Spin-down power") 
+               help="Spin-down power [erg/s]") 
 p.add_argument("-brind", "--brind", dest="BRIND", type=float, default=3.,
                help="Breaking index") 
-p.add_argument("-tau", "--tau", dest="TC", type=float, default=1.2e4,
-               help="Initial spin-down timescale") 
+p.add_argument("-tau0", "--tau0", dest="T0", type=float, default=1.2e4,
+               help="Initial spin-down timescale [yr]") 
 p.add_argument("-p", "--p", dest="P", type=float, default=23.7,
                help="Pulsar Period [ms]") 
 p.add_argument("-p0", "--p0", dest="P0", type=float, default=4.7,
@@ -95,7 +95,7 @@ p.add_argument("-rb", "--rbins", dest="RBINS", type=float, default=400,
                help="Radial bins of the E_R_Array") 
 
 
-# Geminga-related inputs
+# Source-related inputs
 p.add_argument("-norm", "--norm", dest="NORM", type=float, default=12.1e-15,
                help="Normalization of the source's flux at a given pivot E") 
 p.add_argument("-norm_err", "--norm_err", dest="NORM_ERR", type=float, default=2.5e-15,
@@ -113,12 +113,13 @@ p.add_argument("-gamma_err", "--gamma_err", dest="GAMMA_ERR", type=float, defaul
 args = p.parse_args()
 opts = args
 
-AGE       = opts.AGE                    # 3.e5               # yr      Age
+AGE       = opts.AGE                    # 3.e5               # yr      Real Age of the pulsar
+TC        = opts.AGE                    # 3.e5               # yr      Characteristic age of the pulsar
 DIST      = opts.DIST                   # 0.25               # kpc     Distance
 ALPHA     = opts.ALPHA                  # 2.0                # Spectral index of the injection function
 DELTA     = opts.DELTA                  # 0.4                # Diffusion index              
 EMAX      = opts.EMAX * gp.TeV_to_erg   # 500                # erg 
-MU        = opts.MU                     # 0.5                # Percentage of energy that goes into electrons
+MU        = opts.MU                     # 0.5                # Fraction of energy that goes into electrons
 D0        = opts.D0                     # 4.e27              # Diffusion coefficient
 SIZE      = opts.SIZE                   # 4.7                # deg
 KN        = opts.KN                     # False
@@ -126,7 +127,7 @@ TOT_E_DENS= opts.TOT_E_DENS             # 1.06               # eV/cm^3
 BCONT     = opts.BCONT                  # 3.e-6              # Gauss      
 EDOT      = opts.EDOT                   # 3.2e34             # erg/s      
 BRIND     = opts.BRIND                  # 3
-TC        = opts.TC                     # 1.2e4              # yr
+T0        = opts.T0                     # 1.2e4              # yr
 P         = opts.P                      # 20.                # ms
 P0        = opts.P0                     # 20.                # ms
 
@@ -158,6 +159,7 @@ nu_0=nu+nu_dot*t+nu_dot_dot_old*pow(t,2)
 
 l0    =  5.e-20                            # s^-1
 E_star=3.e-3 * gp.TeV_to_erg               # erg
+I = 1e45                                   # g cm^-2  Pulsar moment of inertia
 
 TIMEOFFSET = 0.                            # s
 AGEBURST = AGE                             # s
@@ -182,21 +184,30 @@ ESN = 2.5e48                               # erg
 
 # Luminosity evolution of a pulsar (simply spin-down)
 def CalculateLuminosity(bins):
-    T = np.logspace(math.log10(TMIN),math.log10(2.*AGE),bins) # Array with the time 
-    if (BIRTH_PERIOD):
-        age = AGE*(2/(BRIND-1.))*(1-math.pow(P0/P,(BRIND-1.)))
-        tau = 2*AGE/(BRIND-1.)-age
-        lum0=EDOT/pow(1+AGE/tau,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
-        lum = MU*lum0*(1.+T/tau)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
-        tau0=tau
-        print("Age",age)
-        print("Characteristic age",AGE)
-        print("Tau0",tau0)
+    age = FindAge()
+    T = np.logspace(math.log10(TMIN),math.log10(2.*age),bins) # Array with the time 
+
+    if (BIRTH_PERIOD):     
+        tau0 = 2*TC/(BRIND-1.)-age
+        Ps = P*1e-3
+        Pdot = Ps/(2*TC*gp.yr_to_sec)
+        print "Pdot (ms)",Pdot
+        edot = 4*math.pi**2*I*Pdot/(Ps**3)
+        lum0= edot/pow(1+TC/tau0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
+        lum = MU*lum0*(1.+T/tau0)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
+        print ("Edot ",edot)
     else:
-        lum0=EDOT/pow(1+AGE/TC,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
-        lum = MU*lum0*(1.+T/TC)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
-        tau0=TC
+        edot=EDOT
+        tau0 = T0
+        lum0= EDOT/pow(1+TC/T0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
+        lum = MU*lum0*(1.+T/T0)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
+       
+    print ("Age ",age)
+    print ("Characteristic age ",TC)
+    print ("TAU0",tau0)
+    print ("Edot",edot)
     print ("LUM0",lum0)
+    
     if TIMEOFFSET != 0.:
         t_index = np.max(np.where(T < TIMEOFFSET)[0])
         lumBurst = np.vstack((T[:t_index], lum[:t_index])).T
@@ -204,7 +215,18 @@ def CalculateLuminosity(bins):
     else:
         lumCont = np.vstack((T, lum)).T    # We stack both arrays, having two columns, the first one for the time and the second for the corresponding luminosity
         lumBurst = []
-    return np.log10(lumBurst),np.log10(lumCont),lum0,tau0
+
+    return np.log10(lumBurst),np.log10(lumCont),lum0,tau0,age,edot
+
+# Find the real age of the pulsar (t in eq5 from Gansler&Slane 2006)
+def FindAge():
+    if (BIRTH_PERIOD):
+        print ("age calc - periods(ms) : ",P0, P)
+        age = TC*(2/(BRIND-1.))*(1-math.pow(P0/P,(BRIND-1.)))
+    else:
+        #age = 2*TC/(BRIND-1.0)-T0
+        age = TC
+    return age
 
 # Diffusion coefficient at energy e (in erg)                                                                                                                                                               
 def Diffusion(e):
@@ -575,24 +597,25 @@ if __name__=='__main__':
     bin_Milagro = int(2.6/((max_bin_deg-min_bin_deg)/nbins))  # Bin for the corresponding size given by Milagro's point at FWHM=2.6
 
     #****************** LUMINOSITY *************
-    LUMBURST,LUMCONT,lum0,tau0 = CalculateLuminosity(10000)
+    LUMBURST,LUMCONT,lum0,tau0,age,edot = CalculateLuminosity(10000)
     fig = plt.figure()
     #print "LUMBURST,LUMCONT",LUMBURST,LUMCONT
     if len(LUMBURST) != 0:
         plt.plot(10.**LUMBURST[:,0],10.**LUMBURST[:,1],label=" ")
-    plt.loglog(10.**LUMCONT[:,0],10.**LUMCONT[:,1],label="Pulsar evolution luminosity")
+    plt.loglog(10.**LUMCONT[:,0],10.**LUMCONT[:,1]/MU,label="Pulsar evolution luminosity")
     #plt.xlim([0.,10.*TC])
     plt.xlim([0.,2*AGE])
     #plt.xlim([1.e5,AGE])
-    plt.ylim([EDOT/10.,10**(LUMCONT[0,1]+1)])
+    plt.ylim([edot/10.,LUM0*100])
     plt.ylabel(r'L$_e$ [erg/s]')
     plt.xlabel("Age [kyr]")
-    plt.plot((1., 2*AGE), (EDOT, EDOT), label=r'Constant injection luminosity',color='red')
-    plt.plot((tau0, tau0), (EDOT/10., 10**(LUMCONT[0,1]+1)), label=r'$\tau_c$',color='black',linestyle = "dashed")
+    plt.plot((1., 2*age),  (edot, edot), label=r'Constant injection luminosity',color='red')
+    plt.plot((tau0, tau0), (edot/10., LUM0*100), label=r'$\tau_0$',color='black',linestyle = "dashed")
+    plt.plot((age, age),   (edot/10., LUM0*100), label=r'Now',color='blue',linestyle = "dashed")
     #print tau0,EDOT/10.,LUMCONT[0,1]
     plt.title(r'L$_0$=%.1e erg/s; $\tau_c$=%.1e yr; n = %.1f' %(lum0,tau0,BRIND))
     plt.grid(color="black",alpha=.5)
-    plt.legend(prop={'size':10},loc="upper right")
+    plt.legend(prop={'size':10},loc="upper left")
     #plt.legend(title="log10(L0),t0,n =\n"+str(round(math.log10(LUM0),2))+","+str(round(TC,2))+","+str(round(BRIND,2)),loc="upper right")
     if (FIG_EPS):
         fig.savefig("Figures/Luminosity_"+tag+".eps")
@@ -827,10 +850,6 @@ if __name__=='__main__':
     #for volume_spectra in IntSpec_volume:
     #    plt.loglog(E/gp.TeV_to_erg,E**2.*volume_spectra) # E is in erg
 
-    #Mehr_data = np.loadtxt("Data/GemingaIC.txt",skiprows=2)
-    #y_Mehr = Mehr_data[:,2]*1.e9*pow(Mehr_data[:,0]*1.e-9,2)* gp.TeV_to_erg  
-    #x_Mehr = Mehr_data[:,0]*1.e-9
-
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_1dot7],label='1.7 deg') # E is in erg 
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_5dot5],label='5.5 deg') # E is in erg 
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_8dot6],label='8.6 deg') # E is in erg 
@@ -880,22 +899,22 @@ if __name__=='__main__':
         zipped=zip(s[:,0],s[:,1])
         np.savetxt("Results/Gamma_Spectra_%s_%sdeg.txt" %(tag,d), zipped)
 
-    # Include in the plot Geminga's spectral energy distribution
-    x_Geminga = np.arange(1., 100., 0.1)
-    y_Geminga = NORM*pow(x_Geminga/PIVOT_E,-GAMMA) * pow(x_Geminga,2) * gp.TeV_to_erg                           # Norm is given in TeV^-1 cm^-2 s^-1, but when multiplied by E^2 it is converted to TeV
-    plt.loglog(x_Geminga,y_Geminga,label="Geminga flux",color='black')
+    # Include in the plot Source's spectral energy distribution
+    x_Source = np.arange(1., 100., 0.1)
+    y_Source = NORM*pow(x_Source/PIVOT_E,-GAMMA) * pow(x_Source,2) * gp.TeV_to_erg                           # Norm is given in TeV^-1 cm^-2 s^-1, but when multiplied by E^2 it is converted to TeV
+    plt.loglog(x_Source,y_Source,label=tag,color='black')
     # Butterfly
-    y_max_Geminga_down = (NORM+NORM_ERR)*pow(x_Geminga/PIVOT_E,-(GAMMA+GAMMA_ERR)) * pow(x_Geminga,2) * gp.TeV_to_erg
-    y_min_Geminga_down = (NORM-NORM_ERR)*pow(x_Geminga/PIVOT_E,-(GAMMA-GAMMA_ERR)) * pow(x_Geminga,2) * gp.TeV_to_erg
-    y_max_Geminga_up   = (NORM+NORM_ERR)*pow(x_Geminga/PIVOT_E,-(GAMMA-GAMMA_ERR)) * pow(x_Geminga,2) * gp.TeV_to_erg
-    y_min_Geminga_up   = (NORM-NORM_ERR)*pow(x_Geminga/PIVOT_E,-(GAMMA+GAMMA_ERR)) * pow(x_Geminga,2) * gp.TeV_to_erg
-    plt.fill_between(x_Geminga,y_min_Geminga_down,y_max_Geminga_down,where=x_Geminga<20,color='grey', alpha='0.5')
-    plt.fill_between(x_Geminga,y_min_Geminga_up,y_max_Geminga_up,where=x_Geminga>20,color='grey', alpha='0.5')
+    y_max_Source_down = (NORM+NORM_ERR)*pow(x_Source/PIVOT_E,-(GAMMA+GAMMA_ERR)) * pow(x_Source,2) * gp.TeV_to_erg
+    y_min_Source_down = (NORM-NORM_ERR)*pow(x_Source/PIVOT_E,-(GAMMA-GAMMA_ERR)) * pow(x_Source,2) * gp.TeV_to_erg
+    y_max_Source_up   = (NORM+NORM_ERR)*pow(x_Source/PIVOT_E,-(GAMMA-GAMMA_ERR)) * pow(x_Source,2) * gp.TeV_to_erg
+    y_min_Source_up   = (NORM-NORM_ERR)*pow(x_Source/PIVOT_E,-(GAMMA+GAMMA_ERR)) * pow(x_Source,2) * gp.TeV_to_erg
+    plt.fill_between(x_Source,y_min_Source_down,y_max_Source_down,where=x_Source<20,color='grey', alpha='0.5')
+    plt.fill_between(x_Source,y_min_Source_up,y_max_Source_up,where=x_Source>20,color='grey', alpha='0.5')
     # Milagro point
     x_Milagro = 20. 
     y_Milagro = 6.9e-15 * pow(x_Milagro,2) * gp.TeV_to_erg  
     y_err_Milagro = 1.6e-15 * pow(x_Milagro,2) * gp.TeV_to_erg
-    plt.errorbar(x_Milagro,y_Milagro,yerr=y_err_Milagro,fmt='o',color = "red",label="Milagro")
+    #plt.errorbar(x_Milagro,y_Milagro,yerr=y_err_Milagro,fmt='o',color = "red",label="Milagro")
 
     plt.ylabel("E$^2$ dN/dE [erg s$^{-1}$cm$^{-2}$]", fontsize=13)
     plt.xlabel("E [TeV]", fontsize=13)
@@ -934,7 +953,7 @@ if __name__=='__main__':
     for s,d in zip(sp_volume,degs):
         print ("sp_volume",s)
         plt.loglog(s[:,0],s[:,1],label=r'%s deg' % (d)) # s[:,0] contains the Energy [TeV] and s[:,1] directly the SED [erg cm^-2 s^-1]
-    plt.loglog(x_Geminga,y_Geminga,label="Geminga flux",color='black')
+    plt.loglog(x_Source,y_Source,label=tag,color='black')
     plt.ylabel("E$^2$ dN/dE [erg s$^{-1}$cm$^{-2}$]", fontsize=13)
     plt.xlabel("E [TeV]", fontsize=13)
     plt.ylim([1e-16,1e-8])
