@@ -165,7 +165,8 @@ ESN = 2.5e48                               # erg
 def CalculateLuminosity(bins):
     T = np.logspace(math.log10(TMIN),math.log10(2.*AGE),bins) # Array with the time 
     lum = MU*LUM0*(1.+T/TC)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
-    print "LUM0",LUM0
+    print ("LUM0",LUM0)
+
     if TIMEOFFSET != 0.:
         t_index = np.max(np.where(T < TIMEOFFSET)[0])
         lumBurst = np.vstack((T[:t_index], lum[:t_index])).T
@@ -228,7 +229,7 @@ def Create_E_R_ArrayOfElectrons(rbins,ebins):
     #fig = plt.figure()
     halfwidth = []   # The point at which the density of electrons has gone down to half its maximum value for a given energy
     for ee in e:                                     # For a given energy 
-        print ee
+        print ("Energy [TeV]",ee/gp.TeV_to_erg) 
         #ee = ee*gp.TeV_to_erg
         line = []
         lineplot = []
@@ -547,7 +548,7 @@ if __name__=='__main__':
     #****************** LUMINOSITY *************
     LUMBURST,LUMCONT = CalculateLuminosity(10000)
     fig = plt.figure()
-    print "LUMBURST,LUMCONT",LUMBURST,LUMCONT
+    #print "LUMBURST,LUMCONT",LUMBURST,LUMCONT
     if len(LUMBURST) != 0:
         plt.plot(10.**LUMBURST[:,0],10.**LUMBURST[:,1],label=" ")
     plt.loglog(10.**LUMCONT[:,0],10.**LUMCONT[:,1],label="Pulsar evolution luminosity")
@@ -559,7 +560,7 @@ if __name__=='__main__':
     plt.xlabel("Age [kyr]")
     plt.plot((1., 2*AGE), (EDOT, EDOT), label=r'Constant injection luminosity',color='red')
     plt.plot((TC, TC), (EDOT/10., 10**(LUMCONT[0,1]+1)), label=r'$\tau_c$',color='black',linestyle = "dashed")
-    print TC,EDOT/10.,LUMCONT[0,1]
+    #print TC,EDOT/10.,LUMCONT[0,1]
     plt.title(r'L$_0$=%.1e erg/s; $\tau_c$=%.1e yr; n = %.1f' %(LUM0,TC,BRIND))
     plt.grid(color="black",alpha=.5)
     plt.legend(prop={'size':10},loc="upper right")
@@ -586,7 +587,7 @@ if __name__=='__main__':
     # E: Array of the energies [erg]
     # R: Array of the radii [pc]
     
-    print halfwidth
+    #print halfwidth
 
     # plot it!
     fig,ax =  plt.subplots(1, 1,figsize=(7,5))
@@ -610,17 +611,16 @@ if __name__=='__main__':
     ii = np.where(R >= 1000.*DIST)[0][0] 
     # First index where R > 1000*DIST (corresponds to the distance in pc)
     # Since the problem is spherically symmetric, the flux at Earth is equal to the flux at any point of the sphere with radius R=1000*DIST
-    print "-->",R[ii]
+    #print "-->",R[ii]
     fig = plt.figure()
     fac = 1e4 * c / (4.*gp.pi) # c/4pi  in cm/s, 1e4 transform the cm^-2 to m^-2 in the E^3 J(E) function
     EGeV =  E/gp.TeV_to_erg * 1.e3 # GeV
-    print E/gp.TeV_to_erg
+
     plt.loglog(E/gp.TeV_to_erg,EGeV**3.*GeV_to_erg*fac*twoDarray.T[ii],color="black", label ="Pulsar")  # E^3 J(E)
     # GeV_to_erg pass one of the GeV to erg on the numeral and they go away with the one coming from twoDarray [1/(erg*cm^3)]
 
     #print "EGeV**3.*GeV_to_erg*fac*f_st_int",EGeV**3.*GeV_to_erg*fac*f_st_int
-
-    print "twoDarray.T[ii]",twoDarray.T[ii]
+    print ("Flux_Earth",EGeV**3.*GeV_to_erg*fac*twoDarray.T[ii])
 
     zipped=zip(E/gp.TeV_to_erg,EGeV**3.*GeV_to_erg*fac*twoDarray.T[ii])
     np.savetxt("Results/Flux_Earth"+tag+".txt", zipped)
@@ -641,9 +641,6 @@ if __name__=='__main__':
     y_HESS = HESS_data[:,3]*pow(HESS_data[:,0],3)
     yerror_HESS = HESS_data[:,4]*pow(HESS_data[:,0],3)
     HESS_points = plt.errorbar(HESS_data[:,0]*1.e-3,y_HESS,yerr=yerror_HESS,fmt='^',color = "red",label="HESS",markeredgecolor='k')
-
-    for v in y_HESS:
-        print "HESS Flux in GeV^2/m^2/s/sr",v
 
     # Fermi Data all electron flux
     y_Fermi = Fermi_data[:,3]*pow(Fermi_data[:,0],3)
@@ -707,19 +704,19 @@ if __name__=='__main__':
     #fraction=(0.5 * flux_earth_Source+secondary_pos)/(flux_earth_Source + flux_earth_all_pulsars + primary_el + secondary_el + secondary_pos)                                                            
     fraction=(0.5 * flux_earth_Source+secondary_pos)/(flux_earth_Source +  primary_el + secondary_el + secondary_pos)
     plt.loglog(E/gp.TeV_to_erg,fraction,label = "Fraction total")
-    print "fraction",fraction
+    print ("Fraction",fraction)
     zipped=zip(E/gp.TeV_to_erg,fraction)
     np.savetxt("Results/Fraction_Total_Positron_Earth_"+tag+".txt", zipped)
 
     fraction_galactic_positrons=secondary_pos/(flux_earth_Source+primary_el + secondary_el + secondary_pos)
     plt.loglog(E/gp.TeV_to_erg,fraction_galactic_positrons,label = "Galactic e$^+$ fraction")
-    print "fraction galactic positrons",fraction_galactic_positrons
+    #print "fraction galactic positrons",fraction_galactic_positrons
     zipped=zip(E/gp.TeV_to_erg,fraction_galactic_positrons)
     np.savetxt("Results/Fraction_Galactic_Positron_Earth_"+tag+".txt", zipped)
 
     fraction_Source_positrons=0.5 * flux_earth_Source/(flux_earth_Source+primary_el + secondary_el + secondary_pos)
     plt.loglog(E/gp.TeV_to_erg,fraction_Source_positrons,label = "Source e$^+$ fraction")
-    print "fraction Source positrons",fraction_Source_positrons
+    #print "fraction Source positrons",fraction_Source_positrons
     zipped=zip(E/gp.TeV_to_erg,fraction_Source_positrons)
     np.savetxt("Results/Fraction_Source_Positron_Earth_"+tag+".txt", zipped)
 
@@ -779,7 +776,7 @@ if __name__=='__main__':
     values_diff_spectrum = []
     #for d in deg:
     for d in deg:
-        print "los",d
+        print ("los",d)
         values_diff_spectrum.append(LineOfSightVolumeIntegration(d,0.,twoDarray,E,R,1e4))
     values_diff_spectrum = np.array(values_diff_spectrum)
 
@@ -811,7 +808,7 @@ if __name__=='__main__':
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_8dot6],label='8.6 deg') # E is in erg 
     for d in degs :
         ind=np.where(deg >= d)[0][0]
-        print "ind,d",ind,d
+        print ("ind,d",ind,d)
         plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[ind-1],label='%s deg' % d)
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_Milagro],label='2.6 deg [Milagro]') # E is in erg 
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_Size],label='%s deg' % SIZE) # E is in erg 
@@ -840,8 +837,8 @@ if __name__=='__main__':
     #print inds
     #print IntSpec
     for i,d in zip(inds,degs):
-        print "i,d",i,d
-        print "IntSpec[i-1]",IntSpec[i-1]
+        print ("i,d",i,d)
+        print ("IntSpec[i-1]",IntSpec[i-1])
         s = IntSpec[i-1]
         fr.SetElectrons(zip(E,s))
         fr.CalculateDifferentialPhotonSpectrum(E) 
@@ -850,7 +847,7 @@ if __name__=='__main__':
     sp = np.array(sp)    
     fig = plt.figure()
     for s,d in zip(sp,degs):
-        print "sp",s
+        print ("sp",s)
         plt.loglog(s[:,0],s[:,1],label=r'%s deg' % (d)) # s[:,0] contains the Energy [TeV] and s[:,1] directly the SED [erg cm^-2 s^-1]
         zipped=zip(s[:,0],s[:,1])
         np.savetxt("Results/Gamma_Spectra_%s_%sdeg.txt" %(tag,d), zipped)
@@ -894,8 +891,8 @@ if __name__=='__main__':
     #print inds
     #print IntSpec
     for i,d in zip(inds,degs):
-        print "i,d",i,d
-        print "IntSpec_volume[i-1]",IntSpec_volume[i-1]
+        print ("i,d",i,d)
+        print ("IntSpec_volume[i-1]",IntSpec_volume[i-1])
         s = IntSpec_volume[i-1]
         fr.SetElectrons(zip(E,s))
         #fr.SetElectrons(zip(Mehr_data[:,0]*1.e-9,Mehr_data[:,2]*1.e9/ gp.TeV_to_erg))
@@ -907,7 +904,7 @@ if __name__=='__main__':
     sp_volume = np.array(sp_volume)    
     fig = plt.figure()
     for s,d in zip(sp_volume,degs):
-        print "sp_volume",s
+        print ("sp_volume",s)
         plt.loglog(s[:,0],s[:,1],label=r'%s deg' % (d)) # s[:,0] contains the Energy [TeV] and s[:,1] directly the SED [erg cm^-2 s^-1]
     plt.loglog(x_Geminga,y_Geminga,label="Geminga flux",color='black')
     plt.ylabel("E$^2$ dN/dE [erg s$^{-1}$cm$^{-2}$]", fontsize=13)
@@ -969,15 +966,15 @@ if __name__=='__main__':
     profile = []
     #for p,c in zip(s[:,1],corr):
     for p,c in zip(sb,corr[1:]):
-        print "s,corr 1 TeV",p,c
+        print ("s,corr 1 TeV",p,c)
         profile.append(p/c) # Wrong, should be multiplied?
-        print "p/c 1 TeV",p/c
+        print ("p/c 1 TeV",p/c)
 
     profile_20TeV = []
     for p,c in zip(sb_20TeV,corr[1:]):
-        print "s,corr 20 TeV",p,c
+        print ("s,corr 20 TeV",p,c)
         profile_20TeV.append(p/c) # Wrong, should be multiplied?
-        print "p/c 20 TeV",p/c
+        print ("p/c 20 TeV",p/c)
 
 
     # Calculate the contribution for the first bin in theta
@@ -985,17 +982,17 @@ if __name__=='__main__':
     fr.SetDistance(0.)
     fr.CalculateDifferentialPhotonSpectrum(EE_20TeV_list)
     Total = fr.GetTotalSpectrum()[0][1] # The total differential flux per bin in theta
-    print "Flux from theta[0] to theta[1]=",Total
+    print ("Flux from theta[0] to theta[1]=",Total)
 
     profile_20TeV_diff = []
     profile_20TeV_only_flux = []
     for p,c,d in zip(diff_sb_20TeV,corr[1:],deg[2:]):
-        print "s,corr 20 TeV diff",p,c
+        print ("s,corr 20 TeV diff",p,c)
         profile_20TeV_diff.append(p/c) # Wrong, should be multiplied?
         profile_20TeV_only_flux.append(p)
-        print "p/c 20 TeV diff",p/c
+        print ("p/c 20 TeV diff",p/c)
         Total=Total+p
-        print "Total differential",Total, "[erg^-1 s^1 cm^-2] for deg",d
+        print ("Total differential",Total, "[erg^-1 s^1 cm^-2] for deg",d)
 
     #print "int = ",fu.Integrate(zip(gp.pi*deg_sqr[1:],profile),deg_sqr[1],deg_sqr[len(deg_sqr)-1])
     profile = np.array(profile)
