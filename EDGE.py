@@ -73,9 +73,9 @@ p.add_argument("-brind", "--brind", dest="BRIND", type=float, default=3.,
                help="Breaking index") 
 p.add_argument("-tau0", "--tau0", dest="T0", type=float, default=1.2e4,
                help="Initial spin-down timescale [yr]") 
-p.add_argument("-p", "--p", dest="P", type=float, default=237,
+p.add_argument("-p", "--p", dest="P", type=float, default=237.,
                help="Pulsar Period [ms]") 
-p.add_argument("-p0", "--p0", dest="P0", type=float, default=44,
+p.add_argument("-p0", "--p0", dest="P0", type=float, default=40.5,
                help="Initial pulsar period [ms]") 
 
 # Running-related inputs
@@ -195,7 +195,6 @@ def CalculateLuminosity(bins):
         edot = 4*math.pi**2*I*Pdot/(Ps**3)
         lum0= edot/pow(1+TC/tau0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
         lum = MU*lum0*(1.+T/tau0)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
-        print ("Edot ",edot)
     else:
         edot=EDOT
         tau0 = T0
@@ -221,11 +220,11 @@ def CalculateLuminosity(bins):
 # Find the real age of the pulsar (t in eq5 from Gansler&Slane 2006)
 def FindAge():
     if (BIRTH_PERIOD):
-        print ("age calc - periods(ms) : ",P0, P)
+        print ("Birth period - Period [ms] : ",P0, P)
         age = TC*(2/(BRIND-1.))*(1-math.pow(P0/P,(BRIND-1.)))
     else:
-        #age = 2*TC/(BRIND-1.0)-T0
-        age = TC
+        age = 2*TC/(BRIND-1.0)-T0
+        #age = TC
     return age
 
 # Diffusion coefficient at energy e (in erg)                                                                                                                                                               
