@@ -73,9 +73,9 @@ p.add_argument("-brind", "--brind", dest="BRIND", type=float, default=3.,
                help="Breaking index") 
 p.add_argument("-tau0", "--tau0", dest="T0", type=float, default=1.2e4,
                help="Initial spin-down timescale [yr]") 
-p.add_argument("-p", "--p", dest="P", type=float, default=23.7,
+p.add_argument("-p", "--p", dest="P", type=float, default=237,
                help="Pulsar Period [ms]") 
-p.add_argument("-p0", "--p0", dest="P0", type=float, default=4.7,
+p.add_argument("-p0", "--p0", dest="P0", type=float, default=44,
                help="Initial pulsar period [ms]") 
 
 # Running-related inputs
@@ -159,7 +159,7 @@ nu_0=nu+nu_dot*t+nu_dot_dot_old*pow(t,2)
 
 l0    =  5.e-20                            # s^-1
 E_star=3.e-3 * gp.TeV_to_erg               # erg
-I = 1e45                                   # g cm^-2  Pulsar moment of inertia
+I = 1e45                                   # g cm^2  Pulsar moment of inertia
 
 TIMEOFFSET = 0.                            # s
 AGEBURST = AGE                             # s
@@ -191,7 +191,7 @@ def CalculateLuminosity(bins):
         tau0 = 2*TC/(BRIND-1.)-age
         Ps = P*1e-3
         Pdot = Ps/(2*TC*gp.yr_to_sec)
-        print "Pdot (ms)",Pdot
+        print ("Pdot (ms)",Pdot)
         edot = 4*math.pi**2*I*Pdot/(Ps**3)
         lum0= edot/pow(1+TC/tau0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
         lum = MU*lum0*(1.+T/tau0)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
@@ -606,12 +606,12 @@ if __name__=='__main__':
     #plt.xlim([0.,10.*TC])
     plt.xlim([0.,2*AGE])
     #plt.xlim([1.e5,AGE])
-    plt.ylim([edot/10.,LUM0*100])
+    plt.ylim([edot/10.,lum0*100])
     plt.ylabel(r'L$_e$ [erg/s]')
     plt.xlabel("Age [kyr]")
     plt.plot((1., 2*age),  (edot, edot), label=r'Constant injection luminosity',color='red')
-    plt.plot((tau0, tau0), (edot/10., LUM0*100), label=r'$\tau_0$',color='black',linestyle = "dashed")
-    plt.plot((age, age),   (edot/10., LUM0*100), label=r'Now',color='blue',linestyle = "dashed")
+    plt.plot((tau0, tau0), (edot/10., lum0*100), label=r'$\tau_0$',color='black',linestyle = "dashed")
+    plt.plot((age, age),   (edot/10., lum0*100), label=r'Now',color='blue',linestyle = "dashed")
     #print tau0,EDOT/10.,LUMCONT[0,1]
     plt.title(r'L$_0$=%.1e erg/s; $\tau_c$=%.1e yr; n = %.1f' %(lum0,tau0,BRIND))
     plt.grid(color="black",alpha=.5)
@@ -827,7 +827,7 @@ if __name__=='__main__':
     values_diff_spectrum = []
     #for d in deg:
     for d in deg:
-        print ("los",d)
+        print ("los %.2f" % d)
         values_diff_spectrum.append(LineOfSightVolumeIntegration(d,0.,twoDarray,E,R,1e4))
     values_diff_spectrum = np.array(values_diff_spectrum)
 
@@ -855,7 +855,7 @@ if __name__=='__main__':
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_8dot6],label='8.6 deg') # E is in erg 
     for d in degs :
         ind=np.where(deg >= d)[0][0]
-        print ("ind,d",ind,d)
+        print ("ind %i,d %.2f" % (ind,d))
         plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[ind-1],label='%s deg' % d)
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_Milagro],label='2.6 deg [Milagro]') # E is in erg 
     #plt.loglog(E/gp.TeV_to_erg,E**2.*IntSpec_volume[bin_Size],label='%s deg' % SIZE) # E is in erg 
