@@ -20,7 +20,7 @@ import matplotlib
 # Force matplotlib to not use any Xwindows backend.                                                                                                                                                           
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-sys.path.append(os.path.abspath('/Users/rubenlopez/Code/GAMERA/lib'))
+sys.path.append(os.path.abspath('/Users/rubenlopez/Code/GAMERA-master/lib'))
 import gappa as gp
 import argparse
 import astropy.units as u
