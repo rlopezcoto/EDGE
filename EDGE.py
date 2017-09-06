@@ -51,8 +51,8 @@ p.add_argument("-d", "--distance", dest="DIST", type=float, default=0.25,
                help="Distance to the source [kpc]")
 p.add_argument("-del", "--delta", dest="DELTA", type=float, default=0.33,
                help="Diffusion index")
-p.add_argument("-a", "--age", dest="AGE", type=float, default=3.e5,
-               help="Age of the source [yr]")
+p.add_argument("-a", "--age", dest="AGE", type=float, default=3.42e5,
+               help="Characteristic age of the source [yr]")
 p.add_argument("-emax", "--emax", dest="EMAX", type=float, default=500.,
                help="EMAX of accelerated electrons [TeV]") # You give it in TeV but it is transformed to erg
 p.add_argument("-emin", "--emin", dest="EMIN", type=float, default=0.001,
