@@ -6,3 +6,7 @@
 
 # Backup files
 *~
+
+# Figures and Results folders
+Figures/
+Results/
