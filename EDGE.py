@@ -55,6 +55,8 @@ p.add_argument("-a", "--age", dest="AGE", type=float, default=3.e5,
                help="Age of the source [yr]")
 p.add_argument("-emax", "--emax", dest="EMAX", type=float, default=500.,
                help="EMAX of accelerated electrons [TeV]") # You give it in TeV but it is transformed to erg
+p.add_argument("-emin", "--emin", dest="EMIN", type=float, default=0.001,
+               help="EMIN of accelerated electrons [TeV]") # You give it in TeV but it is transformed to erg
 p.add_argument("-m", "--mu", dest="MU", type=float, default=0.5,
                help="Fraction of energy that goes into electrons") 
 p.add_argument("-d0", "--d0", dest="D0", type=float, default=4.e27,
@@ -65,7 +67,7 @@ p.add_argument("-kn", "--kn", dest="KN", action='store_true', default=False,
                help="Flag to activate or deactivate the KN option to calculate IC losses") 
 p.add_argument("-edens", "--edens", dest="TOT_E_DENS", type=float, default=1.06,
                help="Total energy density. For Thomson losses. [eV/cm^3]") 
-p.add_argument("-bfield", "--bfield", dest="BCONT", type=float, default=3.e-6,
+p.add_argument("-bfield", "--bfield", dest="BCONT", type=float, default=3.,
                help="Magnetic field [G]") 
 p.add_argument("-edot", "--edot", dest="EDOT", type=float, default=3.2e34,
                help="Spin-down power [erg/s]") 
@@ -119,12 +121,13 @@ DIST      = opts.DIST                   # 0.25               # kpc     Distance
 ALPHA     = opts.ALPHA                  # 2.0                # Spectral index of the injection function
 DELTA     = opts.DELTA                  # 0.4                # Diffusion index              
 EMAX      = opts.EMAX * gp.TeV_to_erg   # 500                # erg 
+EMIN      = opts.EMIN * gp.TeV_to_erg   # 0.001              # erg 
 MU        = opts.MU                     # 0.5                # Fraction of energy that goes into electrons
 D0        = opts.D0                     # 4.e27              # Diffusion coefficient
 SIZE      = opts.SIZE                   # 4.7                # deg
 KN        = opts.KN                     # False
 TOT_E_DENS= opts.TOT_E_DENS             # 1.06               # eV/cm^3      
-BCONT     = opts.BCONT                  # 3.e-6              # Gauss      
+BCONT     = opts.BCONT* 1.e-6           # 3.e-6              # muGauss      
 EDOT      = opts.EDOT                   # 3.2e34             # erg/s      
 BRIND     = opts.BRIND                  # 3
 T0        = opts.T0                     # 1.2e4              # yr
@@ -146,15 +149,13 @@ GAMMA     = opts.GAMMA                  # 2.40
 GAMMA_ERR = opts.GAMMA_ERR              # 0.09          
 
 
-
-t=AGE*gp.yr_to_sec                         # s
 electron_mass=0.5e-6                       # TeV/c^2
 c=3.e10                                    # cm/s
 #Edot=3.2e34                                # erg/s
-nu=4.218                                   # Hz      Frequency
-nu_dot=1.952e-13                           # Hz/s    Frequency derivate
-nu_dot_dot_old=1.49e-25                    # Hz/s^2  Frequency second derivate
-nu_0=nu+nu_dot*t+nu_dot_dot_old*pow(t,2) 
+#nu=4.218                                   # Hz      Frequency
+#nu_dot=1.952e-13                           # Hz/s    Frequency derivate
+#nu_dot_dot_old=1.49e-25                    # Hz/s^2  Frequency second derivate
+#nu_0=nu+nu_dot*t+nu_dot_dot_old*pow(t,2) 
 #nu_0=nu+nu_dot*t                           # Hz      Initial frequency
 
 l0    =  5.e-20                            # s^-1
@@ -163,12 +164,12 @@ I = 1e45                                   # g cm^2  Pulsar moment of inertia
 
 TIMEOFFSET = 0.                            # s
 AGEBURST = AGE                             # s
-AGECONT = AGEBURST - TIMEOFFSET            # s
+#AGECONT = 2*TC/(BRIND-1.0)-T0              # s
+#AGECONT = AGEBURST - TIMEOFFSET            # s
 ETA = .1
 el_charge=4.80320427e-10                   # StatC
 
 TMIN = 1.                                  # s
-EMIN = 1.e-3 * gp.TeV_to_erg               # erg
 
 DENS = 1e-4
 TIR = 20.                                  # K
@@ -183,8 +184,7 @@ ESN = 2.5e48                               # erg
 
 
 # Luminosity evolution of a pulsar (simply spin-down)
-def CalculateLuminosity(bins):
-    age = FindAge()
+def CalculateLuminosity(bins,age):
     T = np.logspace(math.log10(TMIN),math.log10(2.*age),bins) # Array with the time 
 
     if (BIRTH_PERIOD):     
@@ -193,12 +193,12 @@ def CalculateLuminosity(bins):
         Pdot = Ps/(2*TC*gp.yr_to_sec)
         print ("Pdot (ms)",Pdot)
         edot = 4*math.pi**2*I*Pdot/(Ps**3)
-        lum0= edot/pow(1+TC/tau0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
+        lum0= edot/pow(1+age/tau0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
         lum = MU*lum0*(1.+T/tau0)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
     else:
         edot=EDOT
         tau0 = T0
-        lum0= EDOT/pow(1+TC/T0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
+        lum0= EDOT/pow(1+age/T0,-1.*(BRIND+1.)/(BRIND-1.))# erg/s
         lum = MU*lum0*(1.+T/T0)**(-1.*(BRIND+1.)/(BRIND-1.))         # Array with the luminosity for each of the times
        
     print ("Age ",age)
@@ -274,22 +274,24 @@ def Create_E_R_ArrayOfElectrons(rbins,ebins):
     r = np.logspace(-3.,math.log10(1.e3*DIST*20.),rbins)      # Array of distances to the pulsar [pc]
     e = np.logspace(math.log10(EMIN),math.log10(EMAX),ebins)  # Array of energies [erg]
 
+    Age=FindAge()
+
     twoDarray = []
     twoDarrayPLOT = []
     thr = 1e-30
     #fig = plt.figure()
     halfwidth = []   # The point at which the density of electrons has gone down to half its maximum value for a given energy
     for ee in e:                                     # For a given energy 
-        print ("Energy [TeV]",ee/gp.TeV_to_erg)
+        print ("Energy: %.4f [TeV]" % (ee/gp.TeV_to_erg))
         line = []
         lineplot = []
         linebplot = []
-        vlamb,DT,E0,E = FillLambdaVector(ee,1000)   # We fill the mean free path vector for each of the energies
+        vlamb,DT,E0,E = FillLambdaVector(ee,1000,Age)   # We fill the mean free path vector for each of the energies
         # vlamb is a vector of the form [(Energy,lambda_integral(Enow=ee)-lambda_integral(Energy))], where ee is varying from EMIN to EMAX and Energy from ee to EMAX 
         vzero = 0.
         fill_halfwidth = True
         for rr in r:
-            scont = Spectrum(ee,vlamb,rr,DT,E0)   # Value in 1/(erg*cm^3) of the differential energy spectrum
+            scont = Spectrum(ee,vlamb,rr,DT,E0,Age)   # Value in 1/(erg*cm^3) of the differential energy spectrum
 #            srl = SpectrumRectilinear(ee,rr)                                                                                                                                                                                                                                 
             if len(LUMBURST):
                 sburst = SpectrumBurst(ee,rr)
@@ -320,12 +322,12 @@ def Create_E_R_ArrayOfElectrons(rbins,ebins):
     return twoDarray,twoDarrayPLOT,halfwidth,e,r
 
 # fill vector of LAMBDA vs lower energy bound of electrons                                                                                                                                                                                                                
-def FillLambdaVector(Enow,bins):
+def FillLambdaVector(Enow,bins,Age):
     DT = math.pow(10.,np.interp(math.log10(Enow),ETRAJCONTINVERSE[:,0],ETRAJCONTINVERSE[:,1]))  # We interpolate between the first element (that is an array) of ETRAJCONTINVERSE (x=energy) and the second (f(x)=time) to obtain the interpolated time for a given energy   
-    if DT < AGECONT:  # If the interpolated time is smaller than the age, we can consider the initial energy E0=EMAX, otherwise we would be on curve 3 of the notes and the maximum energy would not be EMAX but the one calculated in the next step 
+    if DT < Age:  # If the interpolated time is smaller than the age, we can consider the initial energy E0=EMAX, otherwise we would be on curve 3 of the notes and the maximum energy would not be EMAX but the one calculated in the next step 
         E0 = EMAX
     else:
-        E0 = math.pow(10.,np.interp(math.log10(DT-AGECONT),ETRAJCONT[:,0],ETRAJCONT[:,1]))  # We interpolate between the first element (that is an array) of ETRAJCONT (x=time) and the second (f(x)=energy) to obtain the interpolated energy for a given time
+        E0 = math.pow(10.,np.interp(math.log10(DT-Age),ETRAJCONT[:,0],ETRAJCONT[:,1]))  # We interpolate between the first element (that is an array) of ETRAJCONT (x=time) and the second (f(x)=energy) to obtain the interpolated energy for a given time
     E = np.logspace(math.log10(Enow),math.log10(E0),bins)
     lamb = []
     for e in E[1:]:
@@ -343,7 +345,7 @@ def FillLambdaVector(Enow,bins):
 
 # main function to calculate the differential number (1/(erg*cm^3)) of electrons at                                                                                                                     
 # energy e and radius R from the (point-) source in the *continuous* scenario.                                                                                                                     
-def Spectrum(e,vlamb,R,DT,E0):
+def Spectrum(e,vlamb,R,DT,E0,Age):
     tmin = acc_time(E0,BCONT) # minimum acceleration time needed to accelerate the particle to that energy
     if DT <= tmin:
         return 0.
@@ -355,8 +357,8 @@ def Spectrum(e,vlamb,R,DT,E0):
         norm = 1. / (ALPHA-2.) * (math.pow(EMIN, -ALPHA + 2.) - math.pow(EMAX, -ALPHA + 2.))  # Normalization of the electron spectrum
 
     vq = np.array(zip(LUMCONT[:,0],np.log10(10.**LUMCONT[:,1] / norm)))                       # Array with Time and luminosity/normalization
-    T = np.logspace(math.log10(max(1e-3,AGECONT-DT)),math.log10(AGECONT-tmin),2000)           # Array with Time in logarithmic bins
-    T2  = T - (AGECONT - tmin - DT)
+    T = np.logspace(math.log10(max(1e-3,Age-DT)),math.log10(Age-tmin),2000)           # Array with Time in logarithmic bins
+    T2  = T - (Age - tmin - DT)
     e0 = 10.**np.interp(np.log10(T2),ETRAJCONT[:,0],ETRAJCONT[:,1])
     lamb = 10.**np.interp(np.log10(e0),vlamb[:,0],vlamb[:,1])
     Q = 10.**np.interp(np.log10(T),vq[:,0],vq[:,1])
@@ -596,7 +598,8 @@ if __name__=='__main__':
     bin_Milagro = int(2.6/((max_bin_deg-min_bin_deg)/nbins))  # Bin for the corresponding size given by Milagro's point at FWHM=2.6
 
     #****************** LUMINOSITY *************
-    LUMBURST,LUMCONT,lum0,tau0,age,edot = CalculateLuminosity(10000)
+    Age = FindAge()
+    LUMBURST,LUMCONT,lum0,tau0,age,edot = CalculateLuminosity(10000,Age)
     fig = plt.figure()
     #print "LUMBURST,LUMCONT",LUMBURST,LUMCONT
     if len(LUMBURST) != 0:
@@ -612,7 +615,7 @@ if __name__=='__main__':
     plt.plot((tau0, tau0), (edot/10., lum0*100), label=r'$\tau_0$',color='black',linestyle = "dashed")
     plt.plot((age, age),   (edot/10., lum0*100), label=r'Now',color='blue',linestyle = "dashed")
     #print tau0,EDOT/10.,LUMCONT[0,1]
-    plt.title(r'L$_0$=%.1e erg/s; $\tau_c$=%.1e yr; n = %.1f' %(lum0,tau0,BRIND))
+    plt.title(r'L$_0$=%.1e erg/s; $\tau_0$=%.1e yr; n = %.1f' %(lum0,tau0,BRIND))
     plt.grid(color="black",alpha=.5)
     plt.legend(prop={'size':10},loc="upper left")
     #plt.legend(title="log10(L0),t0,n =\n"+str(round(math.log10(LUM0),2))+","+str(round(TC,2))+","+str(round(BRIND,2)),loc="upper right")
@@ -627,7 +630,7 @@ if __name__=='__main__':
     fp = InitialiseGappa(fp,fr,BBURST,AGEBURST)
     ETRAJBURST,ETRAJBURSTINVERSE,LAMBBURST = CalculateEnergyTrajectory(fp)
 
-    fp = InitialiseGappa(fp,fr,BCONT,AGECONT)
+    fp = InitialiseGappa(fp,fr,BCONT,Age)
     ETRAJCONT,ETRAJCONTINVERSE,LAMBCONT = CalculateEnergyTrajectory(fp)
 
     # This creates an array of electron densities in (E,R) space
