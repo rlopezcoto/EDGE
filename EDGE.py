@@ -79,6 +79,8 @@ p.add_argument("-p", "--p", dest="P", type=float, default=237.,
                help="Pulsar Period [ms]") 
 p.add_argument("-p0", "--p0", dest="P0", type=float, default=40.5,
                help="Initial pulsar period [ms]") 
+p.add_argument("-tsupr", "--tsupr", dest="TIMESUPR", type=float, default=0.,
+               help="Suppression time for the luminosity [yr]") 
 
 # Running-related inputs
 p.add_argument("-birth_period", "--birth_period", dest="BIRTH_PERIOD", action='store_true', default=False,
@@ -133,6 +135,7 @@ BRIND     = opts.BRIND                  # 3
 T0        = opts.T0                     # 1.2e4              # yr
 P         = opts.P                      # 20.                # ms
 P0        = opts.P0                     # 20.                # ms
+TIMESUPR  = opts.TIMESUPR               # 0.                 # yr
 
 EBINS     = opts.EBINS                  # 100          
 RBINS     = opts.RBINS                  # 400          
@@ -162,7 +165,6 @@ l0    =  5.e-20                            # s^-1
 E_star=3.e-3 * gp.TeV_to_erg               # erg
 I = 1e45                                   # g cm^2  Pulsar moment of inertia
 
-TIMEOFFSET = 0.                            # s
 AGEBURST = AGE                             # s
 #AGECONT = 2*TC/(BRIND-1.0)-T0              # s
 #AGECONT = AGEBURST - TIMEOFFSET            # s
@@ -207,10 +209,12 @@ def CalculateLuminosity(bins,age):
     print ("Edot",edot)
     print ("LUM0",lum0)
     
-    if TIMEOFFSET != 0.:
-        t_index = np.max(np.where(T < TIMEOFFSET)[0])
-        lumBurst = np.vstack((T[:t_index], lum[:t_index])).T
-        lumCont = np.vstack((T[t_index+1:]-TIMEOFFSET, lum[t_index+1:])).T
+    if TIMESUPR != 0.:
+        t_index = np.max(np.where(T < TIMESUPR)[0])
+        lumBurst = []
+        lum_ones=np.ones(np.size(T[0:+t_index]))
+        lumoffset=np.concatenate((lum_ones,lum[t_index+0:]))
+        lumCont = np.vstack((T, lumoffset)).T
     else:
         lumCont = np.vstack((T, lum)).T    # We stack both arrays, having two columns, the first one for the time and the second for the corresponding luminosity
         lumBurst = []
