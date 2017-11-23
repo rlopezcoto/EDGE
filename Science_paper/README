@@ -1,0 +1,7 @@
+Requirements:
+All the packages included in ../requirements.txt
+Version tested with python 2.7, no guarantee to run it with python 3
+
+To reproduce the Science paper results run:
+python EDGE_Science_paper.py -kn -norm 1.36e-14 -norm_err 1.8e-15 -gamma 2.34 -gamma_err 0.06 -d 0.25  -a 342000. -s 5.5 -al 2.24 -del 0.333 -emax 500 -m 0.39 -d0 1.4e26 -edot 3.2e34 -n Geminga
+python EDGE_Science_paper.py -kn -norm 5.65e-15 -norm_err 2.e-15  -gamma 2.15 -gamma_err 0.23 -d 0.288 -a 111000. -s 4.8 -al 2.05 -del 0.333 -emax 500 -m 0.04 -d0 1.5e26 -edot 3.8e34 -n PSRB0656
