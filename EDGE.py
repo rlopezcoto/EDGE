@@ -503,9 +503,9 @@ def Flux_Earth_all_pulsars(E):
     SN_rate = 2. / (100. * u.yr)
     pulsar_distribution = Homogeneus_distribution_pulsars(max_age,SN_rate);
 
-    x_pc = np.array(pulsar_distribution[3][:]) # in kpc
-    y_pc = np.array(pulsar_distribution[4][:]) # in kpc
-    age  = np.array(pulsar_distribution[9][:]) * gp.yr_to_sec  # in s
+    x_pc = np.array(pulsar_distribution[6][:]) # in kpc
+    y_pc = np.array(pulsar_distribution[7][:]) # in kpc
+    age  = np.array(pulsar_distribution[0][:]) * gp.yr_to_sec  # in s
 
     x_Earth = x_pc - 8.3 # in kpc
     y_Earth = y_pc - 0   # in kpc
